@@ -5,6 +5,7 @@ This is a **Content-Based Movie Recommendation System** that suggests movies sim
 The core of the system is built on creating a "tag" for each movie by combining its most important textual data. These tags are then converted into numerical vectors using **TF-IDF (Term Frequency-Inverse Document Frequency)**, and the **cosine similarity** between these vectors is calculated to determine how "similar" two movies are.
 
 ---
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://movie-recommender-system-prs.streamlit.app/)
 ## 🚀 Key Features
 
 -   **Content-Based Filtering:** Recommends movies by analyzing and comparing their content attributes.
