@@ -73,3 +73,4 @@ Note: The current implementation in app.py does not require you to input the key
 4. Run the Streamlit App
 streamlit run app.py
 The application will open in your default web browser, where you can select a movie to get recommendations.
+
