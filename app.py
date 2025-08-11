@@ -251,7 +251,7 @@ new_df.head()
 # In[36]:
 
 
-get_ipython().system('pip install nltk')
+# get_ipython().system('pip install nltk')
 
 
 # In[37]:
@@ -384,7 +384,7 @@ pickle.dump(new_df,open('movie.pkl','wb'))
 # In[56]:
 
 
-get_ipython().system('pip install streamlit')
+# get_ipython().system('pip install streamlit')
 
 
 # In[58]:
