@@ -2,6 +2,8 @@ import pickle
 import streamlit as st
 import pandas as pd
 import requests
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 def fetch_poster(movie_id):
     """Fetches the movie poster from The Movie Database (TMDB) API."""
@@ -10,20 +12,29 @@ def fetch_poster(movie_id):
         data = requests.get(url)
         data.raise_for_status()  # Raise an exception for bad status codes
         data = data.json()
-        poster_path = data['poster_path']
-        full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-        return full_path
+        poster_path = data.get('poster_path')
+        if poster_path:
+            full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
+            return full_path
     except requests.exceptions.RequestException as e:
-        st.error(f"API request failed: {e}")
-        return "https://placehold.co/500x750/333333/FFFFFF?text=No+Poster"
+        # Silently log the error for debugging, don't show to user
+        # st.error(f"API request failed: {e}") 
+        pass
     except (KeyError, TypeError):
-        st.error("Could not parse poster path from API response.")
-        return "https://placehold.co/500x750/333333/FFFFFF?text=No+Poster"
+        # Silently log the error
+        pass
+    # Return a placeholder if any part of the process fails
+    return "https://placehold.co/500x750/333333/FFFFFF?text=Poster+Not+Available"
 
 
 def recommend(movie):
     """Recommends 5 similar movies based on the selected movie."""
-    index = movies[movies['title'] == movie].index[0]
+    try:
+        index = movies[movies['title'] == movie].index[0]
+    except IndexError:
+        st.error("Movie not found in the dataset.")
+        return [], []
+        
     distances = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda x: x[1])
     
     recommended_movie_names = []
@@ -41,21 +52,30 @@ def recommend(movie):
 st.set_page_config(layout="wide")
 st.header('Movie Recommendation System')
 
-# --- Load Data ---
-# Use st.cache_data to load data only once
+# --- Load Data and Compute Similarity ---
+# This function now also calculates the similarity matrix, which can be slow.
 @st.cache_data
-def load_data():
+def load_and_process_data():
     try:
-        # Corrected the filename from 'movie_list.pkl' to 'movie.pkl'
-        movies_dict = pickle.load(open('movie.pkl', 'rb'))
-        movies_df = pd.DataFrame(movies_dict)
-        similarity_matrix = pickle.load(open('similarity.pkl', 'rb'))
+        movies_df = pd.DataFrame(pickle.load(open('movie.pkl', 'rb')))
+        
+        # --- THIS IS THE SLOW PART ---
+        # Instead of loading similarity.pkl, we calculate it here.
+        cv = CountVectorizer(max_features=5000, stop_words='english')
+        vectors = cv.fit_transform(movies_df['tag']).toarray()
+        similarity_matrix = cosine_similarity(vectors)
+        # -----------------------------
+
         return movies_df, similarity_matrix
     except FileNotFoundError:
-        st.error("Model files not found. Please ensure 'movie.pkl' and 'similarity.pkl' are in the root directory.")
+        st.error("Model file 'movie.pkl' not found. Please ensure it is in the root directory.")
+        return None, None
+    except Exception as e:
+        st.error(f"An error occurred while loading or processing the data: {e}")
         return None, None
 
-movies, similarity = load_data()
+
+movies, similarity = load_and_process_data()
 
 if movies is not None and similarity is not None:
     movie_list = movies['title'].values
@@ -68,9 +88,10 @@ if movies is not None and similarity is not None:
         with st.spinner('Fetching recommendations...'):
             recommended_movie_names, recommended_movie_posters = recommend(selected_movie)
             
-            # Display recommendations in columns
-            cols = st.columns(5)
-            for i in range(5):
-                with cols[i]:
-                    st.text(recommended_movie_names[i])
-                    st.image(recommended_movie_posters[i])
+            if recommended_movie_names:
+                # Display recommendations in columns
+                cols = st.columns(5)
+                for i in range(len(recommended_movie_names)):
+                    with cols[i]:
+                        st.text(recommended_movie_names[i])
+                        st.image(recommended_movie_posters[i])
