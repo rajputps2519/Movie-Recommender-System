@@ -46,12 +46,13 @@ st.header('Movie Recommendation System')
 @st.cache_data
 def load_data():
     try:
-        movies_dict = pickle.load(open('movie_list.pkl', 'rb'))
+        # Corrected the filename from 'movie_list.pkl' to 'movie.pkl'
+        movies_dict = pickle.load(open('movie.pkl', 'rb'))
         movies_df = pd.DataFrame(movies_dict)
         similarity_matrix = pickle.load(open('similarity.pkl', 'rb'))
         return movies_df, similarity_matrix
     except FileNotFoundError:
-        st.error("Model files not found. Please ensure 'movie_list.pkl' and 'similarity.pkl' are in the root directory.")
+        st.error("Model files not found. Please ensure 'movie.pkl' and 'similarity.pkl' are in the root directory.")
         return None, None
 
 movies, similarity = load_data()
