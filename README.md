@@ -27,7 +27,8 @@ The core of the system is built on creating a "tag" for each movie by combining 
 
 ---
 ## 📂 Project Structure
-
+```
+.
 ├── .ipynb_checkpoints/   # Jupyter Notebook checkpoints
 ├── app.py                # Main Streamlit application script
 ├── movie_recommender.ipynb # Jupyter Notebook for model development and data processing
